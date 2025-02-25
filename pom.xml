@@ -1,27 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>9</version>
+    <groupId>eu.maveniverse.maven.parent</groupId>
+    <artifactId>parent</artifactId>
+    <version>24</version>
   </parent>
 
-  <groupId>kr.motd.maven</groupId>
+  <groupId>eu.maveniverse.maven</groupId>
   <artifactId>os-maven-plugin</artifactId>
-  <version>1.7.2-SNAPSHOT</version>
+  <version>2.0.0-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
 
   <name>os-maven-plugin</name>
-  <url>https://github.com/trustin/os-maven-plugin/</url>
-  <description>
-    A Maven extension/plugin that generates various useful platform-dependent project properties normalized from
-    ${os.name} and ${os.arch}.
-  </description>
-
-  <organization>
-    <name>Trustin Lee</name>
-    <url>http://t.motd.kr/</url>
-  </organization>
+  <description>A Maven extension/plugin that generates various useful platform-dependent project properties normalized from
+    ${os.name} and ${os.arch}.</description>
+  <url>https://github.com/maveniverse/os-maven-plugin/</url>
+  <inceptionYear>2014</inceptionYear>
 
   <licenses>
     <license>
@@ -29,33 +24,23 @@
       <url>http://www.apache.org/licenses/LICENSE-2.0</url>
     </license>
   </licenses>
-  <inceptionYear>2014</inceptionYear>
-
-  <scm>
-    <url>https://github.com/trustin/os-maven-plugin</url>
-    <connection>scm:git:git://github.com/trustin/os-maven-plugin.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/trustin/os-maven-plugin.git</developerConnection>
-    <tag>HEAD</tag>
-  </scm>
-
-  <developers>
-    <developer>
-      <id>trustin</id>
-      <name>Trustin Lee</name>
-      <email>t@motd.kr</email>
-      <url>http://t.motd.kr/</url>
-      <organization>Trustin Lee</organization>
-      <organizationUrl>http://t.motd.kr/</organizationUrl>
-    </developer>
-  </developers>
 
   <prerequisites>
-    <maven>3.1</maven>
+    <maven>3.6.3</maven>
   </prerequisites>
+
+  <scm>
+    <connection>scm:git:git://github.com/maveniverse/os-maven-plugin.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/maveniverse/os-maven-plugin.git</developerConnection>
+    <tag>HEAD</tag>
+    <url>https://github.com/maveniverse/os-maven-plugin</url>
+  </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
+    <requireBuildtimeMavenVersion.version>[3.6.3,)</requireBuildtimeMavenVersion.version>
+    <requireBuildtimeJavaVersion.version>[11,)</requireBuildtimeJavaVersion.version>
 
     <!-- Using the same java.home for IT -->
     <invoker.javaHome>${java.home}</invoker.javaHome>
@@ -65,24 +50,24 @@
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-plugin-api</artifactId>
-      <version>3.5.3</version>
+      <version>3.6.3</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-core</artifactId>
-      <version>3.5.3</version>
+      <version>3.6.3</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.plugin-tools</groupId>
       <artifactId>maven-plugin-annotations</artifactId>
-      <version>3.5.1</version>
+      <version>3.15.1</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-utils</artifactId>
-      <version>3.1.0</version>
+      <version>3.5.1</version>
     </dependency>
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
@@ -113,7 +98,7 @@
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.1</version>
+        <version>3.14.0</version>
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
@@ -135,7 +120,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-plugin-plugin</artifactId>
-        <version>3.6.0</version>
+        <version>3.15.1</version>
         <configuration>
           <goalPrefix>os</goalPrefix>
           <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
@@ -170,16 +155,16 @@
         </configuration>
         <executions>
           <execution>
-            <phase>process-classes</phase>
             <goals>
               <goal>check</goal>
             </goals>
+            <phase>process-classes</phase>
           </execution>
         </executions>
       </plugin>
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>3.2.0</version>
+        <version>3.4.2</version>
         <configuration>
           <archive>
             <manifestEntries>
@@ -196,7 +181,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-invoker-plugin</artifactId>
-        <version>3.2.2</version>
+        <version>3.9.0</version>
         <configuration>
           <debug>true</debug>
           <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
@@ -204,7 +189,7 @@
             <pomInclude>*/pom.xml</pomInclude>
           </pomIncludes>
           <postBuildHookScript>verify</postBuildHookScript>
-<!--          <settingsFile>src/it/settings.xml</settingsFile>-->
+          <!--          <settingsFile>src/it/settings.xml</settingsFile>-->
           <streamLogs>true</streamLogs>
           <goals>
             <goal>clean</goal>
@@ -214,16 +199,15 @@
         <executions>
           <execution>
             <id>integration-test</id>
-            <phase>integration-test</phase>
             <goals>
               <goal>install</goal>
               <goal>integration-test</goal>
               <goal>verify</goal>
             </goals>
+            <phase>integration-test</phase>
           </execution>
         </executions>
       </plugin>
     </plugins>
   </build>
 </project>
-

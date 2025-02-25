@@ -1,16 +1,14 @@
-package kr.motd.maven.os;
+package eu.maveniverse.maven.os;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Map;
-
 import org.apache.maven.execution.MavenSession;
 import org.codehaus.plexus.logging.Logger;
 
 final class RepositorySessionInjector {
     @SuppressWarnings("unchecked")
-    static void injectRepositorySession(
-            Logger logger, MavenSession session, Map<String, String> dict) {
+    static void injectRepositorySession(Logger logger, MavenSession session, Map<String, String> dict) {
         // Inject repository session properties.
         try {
             Map<String, String> repoSessionProps;

@@ -1,8 +1,7 @@
-package kr.motd.maven.os;
+package eu.maveniverse.maven.os;
 
 import java.util.Collections;
 import java.util.Properties;
-
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;

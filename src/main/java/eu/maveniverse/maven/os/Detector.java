@@ -13,14 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package kr.motd.maven.os;
+package eu.maveniverse.maven.os;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -63,8 +65,9 @@ public abstract class Detector {
         this(new SimpleSystemPropertyOperations(), new SimpleFileOperations());
     }
 
-    public Detector(SystemPropertyOperationProvider systemPropertyOperationProvider,
-        FileOperationProvider fileOperationProvider) {
+    public Detector(
+            SystemPropertyOperationProvider systemPropertyOperationProvider,
+            FileOperationProvider fileOperationProvider) {
         this.systemPropertyOperationProvider = systemPropertyOperationProvider;
         this.fileOperationProvider = fileOperationProvider;
     }
@@ -84,7 +87,7 @@ public abstract class Detector {
 
         setProperty(props, DETECTED_NAME, detectedName);
         setProperty(props, DETECTED_ARCH, detectedArch);
-        setProperty(props, DETECTED_BITNESS,"" + detectedBitness);
+        setProperty(props, DETECTED_BITNESS, "" + detectedBitness);
 
         final Matcher versionMatcher = VERSION_REGEX.matcher(osVersion);
         if (versionMatcher.matches()) {
@@ -93,8 +96,7 @@ public abstract class Detector {
             setProperty(props, DETECTED_VERSION_MINOR, versionMatcher.group(3));
         }
 
-        final String failOnUnknownOS =
-            systemPropertyOperationProvider.getSystemProperty("failOnUnknownOS");
+        final String failOnUnknownOS = systemPropertyOperationProvider.getSystemProperty("failOnUnknownOS");
         if (!"false".equalsIgnoreCase(failOnUnknownOS)) {
             if (UNKNOWN.equals(detectedName)) {
                 throw new DetectionException("unknown os.name: " + osName);
@@ -145,6 +147,7 @@ public abstract class Detector {
     }
 
     protected abstract void log(String message);
+
     protected abstract void logProperty(String name, String value);
 
     private static String normalizeOs(String value) {
@@ -289,13 +292,13 @@ public abstract class Detector {
         BufferedReader reader = null;
         try {
             InputStream in = fileOperationProvider.readFile(fileName);
-            reader = new BufferedReader(new InputStreamReader(in, "utf-8"));
+            reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
 
             String id = null;
             String version = null;
             final Set<String> likeSet = new LinkedHashSet<String>();
             String line;
-            while((line = reader.readLine()) != null) {
+            while ((line = reader.readLine()) != null) {
                 // Parse the ID line.
                 if (line.startsWith(LINUX_ID_PREFIX)) {
                     // Set the ID for this version.
@@ -318,7 +321,7 @@ public abstract class Detector {
                     line = normalizeOsReleaseValue(line.substring(LINUX_ID_LIKE_PREFIX.length()));
 
                     // Split the line on any whitespace.
-                    final String[] parts =  line.split("\\s+");
+                    final String[] parts = line.split("\\s+");
                     Collections.addAll(likeSet, parts);
                 }
             }
@@ -343,7 +346,7 @@ public abstract class Detector {
         BufferedReader reader = null;
         try {
             InputStream in = fileOperationProvider.readFile(fileName);
-            reader = new BufferedReader(new InputStreamReader(in, "utf-8"));
+            reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
 
             // There is only a single line in this file.
             String line = reader.readLine();
@@ -402,7 +405,7 @@ public abstract class Detector {
         }
 
         // as a last resort, try to determine the bitness from the architecture.
-      return guessBitnessFromArchitecture(architecture);
+        return guessBitnessFromArchitecture(architecture);
     }
 
     public static int guessBitnessFromArchitecture(final String arch) {
@@ -412,7 +415,6 @@ public abstract class Detector {
 
         return 32;
     }
-
 
     private static void closeQuietly(Closeable obj) {
         try {
@@ -456,7 +458,7 @@ public abstract class Detector {
     private static class SimpleFileOperations implements FileOperationProvider {
         @Override
         public InputStream readFile(String fileName) throws IOException {
-            return new FileInputStream(fileName);
+            return Files.newInputStream(Paths.get(fileName));
         }
     }
 }

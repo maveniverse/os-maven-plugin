@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package kr.motd.maven.os;
+package eu.maveniverse.maven.os;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -22,10 +22,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-
 import org.apache.maven.AbstractMavenLifecycleParticipant;
 import org.apache.maven.MavenExecutionException;
 import org.apache.maven.execution.MavenSession;
@@ -108,7 +106,8 @@ public class DetectExtension extends AbstractMavenLifecycleParticipant {
         try {
             detector.detect(sessionProps, getClassifierWithLikes(session));
         } catch (DetectionException e) {
-            throw new MavenExecutionException(e.getMessage(), session.getCurrentProject().getFile());
+            throw new MavenExecutionException(
+                    e.getMessage(), session.getCurrentProject().getFile());
         }
 
         // Generate the dictionary.
@@ -147,15 +146,15 @@ public class DetectExtension extends AbstractMavenLifecycleParticipant {
             props.putAll(session.getCurrentProject().getProperties());
         }
 
-        return DetectMojo.getClassifierWithLikes(
-            props.getProperty(DetectMojo.CLASSIFIER_WITH_LIKES_PROPERTY));
+        return DetectMojo.getClassifierWithLikes(props.getProperty(DetectMojo.CLASSIFIER_WITH_LIKES_PROPERTY));
     }
 
     private void injectSession(MavenSession session, Map<String, String> dict) {
         final Properties sessionExecProps = session.getSystemProperties();
         sessionExecProps.setProperty(Detector.DETECTED_NAME, String.valueOf(dict.get(Detector.DETECTED_NAME)));
         sessionExecProps.setProperty(Detector.DETECTED_ARCH, String.valueOf(dict.get(Detector.DETECTED_ARCH)));
-        sessionExecProps.setProperty(Detector.DETECTED_CLASSIFIER, String.valueOf(dict.get(Detector.DETECTED_CLASSIFIER)));
+        sessionExecProps.setProperty(
+                Detector.DETECTED_CLASSIFIER, String.valueOf(dict.get(Detector.DETECTED_CLASSIFIER)));
         for (Map.Entry<String, String> entry : dict.entrySet()) {
             if (entry.getKey().startsWith(Detector.DETECTED_RELEASE)) {
                 sessionExecProps.setProperty(entry.getKey(), String.valueOf(entry.getValue()));
@@ -163,7 +162,7 @@ public class DetectExtension extends AbstractMavenLifecycleParticipant {
         }
 
         // Work around the 'NoClassDefFoundError' or 'ClassNotFoundException' related with Aether in IntelliJ IDEA.
-        for (StackTraceElement e: new Exception().getStackTrace()) {
+        for (StackTraceElement e : new Exception().getStackTrace()) {
             if (String.valueOf(e.getClassName()).startsWith("org.jetbrains.idea.maven")) {
                 return;
             }
@@ -181,7 +180,7 @@ public class DetectExtension extends AbstractMavenLifecycleParticipant {
 
         interpolate(dict, p.getParent());
         interpolate(dict, p.getModel());
-        for (ModelBase model: p.getActiveProfiles()) {
+        for (ModelBase model : p.getActiveProfiles()) {
             interpolate(dict, model);
         }
     }
@@ -201,11 +200,11 @@ public class DetectExtension extends AbstractMavenLifecycleParticipant {
         if (model instanceof Model) {
             final Build build = ((Model) model).getBuild();
             if (build != null) {
-                for (Plugin bp: build.getPlugins()) {
+                for (Plugin bp : build.getPlugins()) {
                     interpolate(dict, bp.getDependencies());
                 }
                 if (build.getPluginManagement() != null) {
-                    for (Plugin bp: build.getPluginManagement().getPlugins()) {
+                    for (Plugin bp : build.getPluginManagement().getPlugins()) {
                         interpolate(dict, bp.getDependencies());
                     }
                 }
@@ -218,13 +217,13 @@ public class DetectExtension extends AbstractMavenLifecycleParticipant {
             return;
         }
 
-        for (Dependency d: dependencies) {
+        for (Dependency d : dependencies) {
             d.setGroupId(interpolate(dict, d.getGroupId()));
             d.setArtifactId(interpolate(dict, d.getArtifactId()));
             d.setVersion(interpolate(dict, d.getVersion()));
             d.setClassifier(interpolate(dict, d.getClassifier()));
             d.setSystemPath(interpolate(dict, d.getSystemPath()));
-            for (Exclusion e: d.getExclusions()) {
+            for (Exclusion e : d.getExclusions()) {
                 e.setGroupId(interpolate(dict, e.getGroupId()));
                 e.setArtifactId(interpolate(dict, e.getArtifactId()));
             }
@@ -237,17 +236,17 @@ public class DetectExtension extends AbstractMavenLifecycleParticipant {
             return null;
         }
 
-        for (;;) {
+        for (; ; ) {
             if (!value.contains("${")) {
                 // Nothing to interpolate.
                 break;
             }
 
-            @SuppressWarnings({ "unchecked", "rawtypes" })
-            final InterpolationFilterReader reader = new InterpolationFilterReader(
-                    new StringReader(value), (Map<String, Object>) (Map) dict);
+            @SuppressWarnings({"unchecked", "rawtypes"})
+            final InterpolationFilterReader reader =
+                    new InterpolationFilterReader(new StringReader(value), (Map<String, Object>) (Map) dict);
             final StringWriter writer = new StringWriter(value.length());
-            for (;;) {
+            for (; ; ) {
                 final int ch;
                 try {
                     ch = reader.read();

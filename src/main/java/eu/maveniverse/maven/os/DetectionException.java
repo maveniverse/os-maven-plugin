@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package kr.motd.maven.os;
+package eu.maveniverse.maven.os;
 
 public class DetectionException extends RuntimeException {
     private static final long serialVersionUID = 7787197994442254320L;
