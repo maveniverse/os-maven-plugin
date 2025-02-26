@@ -2,6 +2,8 @@
 
 `${os.name}` and `${os.arch}` are often subtly different between JVM and operating system versions or they sometimes contain machine-unfriendly characters such as whitespaces.  This plugin tries to remove such fragmentation so that you can determine the current operating system and architecture reliably.
 
+This plugin is a fork of the original [`os-maven-plugin`](https://github.com/trustin/os-maven-plugin) which is unmaintained.
+
 ### Generated properties
 
 `os-maven-plugin` detects the information about the current operating system and normalize it into more portable one.
