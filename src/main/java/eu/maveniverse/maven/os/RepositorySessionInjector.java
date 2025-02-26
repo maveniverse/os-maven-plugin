@@ -2,6 +2,8 @@ package eu.maveniverse.maven.os;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import org.apache.maven.execution.MavenSession;
 import org.codehaus.plexus.logging.Logger;
@@ -19,19 +21,32 @@ final class RepositorySessionInjector {
             // Both interfaces have getSystemProperties() accessor method that returns Map<String, String>.
             final Object repoSession = session.getRepositorySession();
             final Class<?> cls = repoSession.getClass();
-            final Method getSystemPropertiesMethod = cls.getDeclaredMethod("getSystemProperties");
+            final Method getSystemPropertiesMethod = cls.getMethod("getSystemProperties");
             repoSessionProps = (Map<String, String>) getSystemPropertiesMethod.invoke(repoSession);
             try {
-                for (Map.Entry<String, String> e : dict.entrySet()) {
-                    repoSessionProps.put(e.getKey(), e.getValue());
-                }
+                repoSessionProps.putAll(dict);
             } catch (Exception ex) {
                 // Time to hack: RepositorySystemSession.getSystemProperties() returned an immutable map.
                 final Field f = cls.getDeclaredField("systemProperties");
                 f.setAccessible(true);
                 repoSessionProps = (Map<String, String>) f.get(repoSession);
-                for (Map.Entry<String, String> e : dict.entrySet()) {
-                    repoSessionProps.put(e.getKey(), e.getValue());
+                try {
+                    repoSessionProps.putAll(dict);
+                } catch (Exception ex2) {
+                    // In Maven 4, DefaultCloseableSession uses an immutable map
+                    // but DefaultRepositorySystemSession may also have an immutable map
+                    repoSessionProps = new HashMap<>(repoSessionProps);
+                    repoSessionProps.putAll(dict);
+                    repoSessionProps = Collections.unmodifiableMap(repoSessionProps);
+                    f.set(repoSession, repoSessionProps);
+                    try {
+                        // This is to support DefaultRepositorySystemSession
+                        final Field fv = cls.getDeclaredField("systemPropertiesView");
+                        fv.setAccessible(true);
+                        fv.set(repoSession, repoSessionProps);
+                    } catch (Exception ex3) {
+                        // ignore
+                    }
                 }
             }
         } catch (Throwable t) {

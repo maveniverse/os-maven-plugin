@@ -19,7 +19,7 @@ public class EclipseStartup extends Detector implements IStartup {
     public void earlyStartup() {
         final Bundle bundle = Platform.getBundle(ID);
         logger = Platform.getLog(bundle);
-        detect(new Properties(), Collections.<String>emptyList());
+        detect(new Properties(), Collections.emptyList());
     }
 
     @Override

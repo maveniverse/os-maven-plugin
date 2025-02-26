@@ -5,6 +5,7 @@
     <groupId>eu.maveniverse.maven.it</groupId>
     <artifactId>test-activate-profile</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
     <description>
         An integration test that checks whether the profile can be activated by detected properties. If the
@@ -12,11 +13,9 @@
         considered successful.
     </description>
 
-    <prerequisites>
-        <!-- (since Maven 3.3.1) configure your extension in .mvn/extensions.xml -->
-        <!-- https://maven.apache.org/examples/maven-3-lifecycle-extensions.html -->
-        <maven>3.3.1</maven>
-    </prerequisites>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
     <build>
         <plugins>

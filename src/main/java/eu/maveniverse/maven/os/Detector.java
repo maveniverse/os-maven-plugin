@@ -22,7 +22,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -391,16 +391,16 @@ public abstract class Detector {
 
     private int determineBitness(String architecture) {
         // try the widely adopted sun specification first.
-        String bitness = systemPropertyOperationProvider.getSystemProperty("sun.arch.data.model", "");
+        String bitness = systemPropertyOperationProvider.getSystemProperty("sun.arch.data.model");
 
-        if (!bitness.isEmpty() && bitness.matches("[0-9]+")) {
+        if (bitness != null && !bitness.isEmpty() && bitness.matches("[0-9]+")) {
             return Integer.parseInt(bitness, 10);
         }
 
         // bitness from sun.arch.data.model cannot be used. Try the IBM specification.
-        bitness = systemPropertyOperationProvider.getSystemProperty("com.ibm.vm.bitmode", "");
+        bitness = systemPropertyOperationProvider.getSystemProperty("com.ibm.vm.bitmode");
 
-        if (!bitness.isEmpty() && bitness.matches("[0-9]+")) {
+        if (bitness != null && !bitness.isEmpty() && bitness.matches("[0-9]+")) {
             return Integer.parseInt(bitness, 10);
         }
 
@@ -438,7 +438,7 @@ public abstract class Detector {
         }
     }
 
-    private static class SimpleSystemPropertyOperations implements SystemPropertyOperationProvider {
+    static class SimpleSystemPropertyOperations implements SystemPropertyOperationProvider {
         @Override
         public String getSystemProperty(String name) {
             return System.getProperty(name);
@@ -455,10 +455,10 @@ public abstract class Detector {
         }
     }
 
-    private static class SimpleFileOperations implements FileOperationProvider {
+    static class SimpleFileOperations implements FileOperationProvider {
         @Override
         public InputStream readFile(String fileName) throws IOException {
-            return Files.newInputStream(Paths.get(fileName));
+            return Files.newInputStream(Path.of(fileName));
         }
     }
 }

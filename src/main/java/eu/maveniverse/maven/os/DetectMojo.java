@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package eu.maveniverse.maven.os;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -54,7 +56,6 @@ public class DetectMojo extends AbstractMojo {
     static final String CLASSIFIER_WITH_LIKES_PROPERTY = "os.detection.classifierWithLikes";
 
     @Parameter(defaultValue = "${project}", readonly = true)
-    @SuppressWarnings("UnusedDeclaration")
     private MavenProject project;
 
     @Parameter(property = CLASSIFIER_WITH_LIKES_PROPERTY, defaultValue = "${" + CLASSIFIER_WITH_LIKES_PROPERTY + '}')
@@ -75,6 +76,10 @@ public class DetectMojo extends AbstractMojo {
             }
         }
     };
+    /**
+     * Create a mojo instance to detect OS information.
+     */
+    public DetectMojo() {}
 
     @Override
     public void execute() throws MojoExecutionException {
@@ -96,14 +101,9 @@ public class DetectMojo extends AbstractMojo {
         if (propertyValue == null) {
             return Collections.emptyList();
         }
-        final String[] parts = propertyValue.split(",");
-        final List<String> likes = new ArrayList<String>(parts.length);
-        for (String part : parts) {
-            part = part.trim();
-            if (!part.isEmpty()) {
-                likes.add(part);
-            }
-        }
-        return likes;
+        return Arrays.stream(propertyValue.split(","))
+                .map(String::trim)
+                .filter(part -> !part.isEmpty())
+                .collect(Collectors.toList());
     }
 }

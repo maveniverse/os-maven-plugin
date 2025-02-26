@@ -18,12 +18,13 @@ package eu.maveniverse.maven.os;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import javax.annotation.Nullable;
+import javax.enterprise.inject.Typed;
 import javax.inject.Inject;
+import javax.inject.Named;
 import org.apache.maven.AbstractMavenLifecycleParticipant;
 import org.apache.maven.MavenExecutionException;
 import org.apache.maven.execution.MavenSession;
@@ -35,7 +36,6 @@ import org.apache.maven.model.Model;
 import org.apache.maven.model.ModelBase;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.util.InterpolationFilterReader;
 
@@ -64,12 +64,30 @@ import org.codehaus.plexus.util.InterpolationFilterReader;
  *     available. An entry will always be made for os.detected.release.like.${os.detected.release}. </li>
  * </ul>
  */
-@Component(role = AbstractMavenLifecycleParticipant.class, hint = "detect-os")
+@Named("detect-os")
+@Typed(AbstractMavenLifecycleParticipant.class)
 public class DetectExtension extends AbstractMavenLifecycleParticipant {
+
+    private static boolean disable;
+
+    /**
+     * When running in Maven 4, the interpolation of existing projects can be very slow.
+     * This allows disabling the interpolation of existing projects, as this Maven 4
+     * extension provides the properties early enough so that they are available for
+     * interpolation.
+     */
+    public static void disable() {
+        disable = true;
+    }
 
     private final Logger logger;
     private final Detector detector;
 
+    /**
+     * Create a Maven extension instance with the platform specific logger.
+     *
+     * @param logger the platform specific logger
+     */
     @Inject
     public DetectExtension(final Logger logger) {
         this.logger = logger;
@@ -90,6 +108,10 @@ public class DetectExtension extends AbstractMavenLifecycleParticipant {
 
     @Override
     public void afterSessionStart(MavenSession session) throws MavenExecutionException {
+        if (!disable) {
+            logger.info(
+                    "The os-detector Maven 3 extension is registered, OS and CPU architecture properties will be provided.");
+        }
         injectProperties(session);
     }
 
@@ -99,19 +121,34 @@ public class DetectExtension extends AbstractMavenLifecycleParticipant {
     }
 
     private void injectProperties(MavenSession session) throws MavenExecutionException {
+        if (disable) {
+            return;
+        }
+        final Map<String, String> dict = getProperties(session);
+        // Inject the current session.
+        injectSession(session, dict);
+        // Perform the interpolation for the properties of all dependencies.
+        if (session.getProjects() != null) {
+            for (MavenProject p : session.getProjects()) {
+                interpolate(dict, p);
+            }
+        }
+    }
+
+    private Map<String, String> getProperties(MavenSession session) throws MavenExecutionException {
         // Detect the OS and CPU architecture.
         final Properties sessionProps = new Properties();
         sessionProps.putAll(session.getSystemProperties());
         sessionProps.putAll(session.getUserProperties());
         try {
-            detector.detect(sessionProps, getClassifierWithLikes(session));
+            detector.detect(sessionProps, Collections.emptyList());
         } catch (DetectionException e) {
             throw new MavenExecutionException(
                     e.getMessage(), session.getCurrentProject().getFile());
         }
 
         // Generate the dictionary.
-        final Map<String, String> dict = new LinkedHashMap<String, String>();
+        final Map<String, String> dict = new LinkedHashMap<>();
         dict.put(Detector.DETECTED_NAME, sessionProps.getProperty(Detector.DETECTED_NAME));
         dict.put(Detector.DETECTED_ARCH, sessionProps.getProperty(Detector.DETECTED_ARCH));
         dict.put(Detector.DETECTED_BITNESS, sessionProps.getProperty(Detector.DETECTED_BITNESS));
@@ -122,31 +159,7 @@ public class DetectExtension extends AbstractMavenLifecycleParticipant {
             }
         }
 
-        // Inject the current session.
-        injectSession(session, dict);
-
-        /// Perform the interpolation for the properties of all dependencies.
-        if (session.getProjects() != null) {
-            for (MavenProject p : session.getProjects()) {
-                interpolate(dict, p);
-            }
-        }
-    }
-
-    /**
-     * Inspects the session's user and project properties for the {@link
-     * DetectMojo#CLASSIFIER_WITH_LIKES_PROPERTY} and separates the property into a list.
-     */
-    private static List<String> getClassifierWithLikes(MavenSession session) {
-        // Check to see if the project defined the
-        final Properties props = new Properties();
-        props.putAll(session.getUserProperties());
-
-        if (session.getCurrentProject() != null) {
-            props.putAll(session.getCurrentProject().getProperties());
-        }
-
-        return DetectMojo.getClassifierWithLikes(props.getProperty(DetectMojo.CLASSIFIER_WITH_LIKES_PROPERTY));
+        return dict;
     }
 
     private void injectSession(MavenSession session, Map<String, String> dict) {
@@ -163,7 +176,7 @@ public class DetectExtension extends AbstractMavenLifecycleParticipant {
 
         // Work around the 'NoClassDefFoundError' or 'ClassNotFoundException' related with Aether in IntelliJ IDEA.
         for (StackTraceElement e : new Exception().getStackTrace()) {
-            if (String.valueOf(e.getClassName()).startsWith("org.jetbrains.idea.maven")) {
+            if (e.getClassName().startsWith("org.jetbrains.idea.maven")) {
                 return;
             }
         }
@@ -230,7 +243,6 @@ public class DetectExtension extends AbstractMavenLifecycleParticipant {
         }
     }
 
-    @Nullable
     private static String interpolate(Map<String, String> dict, String value) {
         if (value == null) {
             return null;
@@ -252,7 +264,7 @@ public class DetectExtension extends AbstractMavenLifecycleParticipant {
                     ch = reader.read();
                 } catch (IOException e) {
                     // Should not reach here.
-                    throw (Error) new Error().initCause(e);
+                    throw (Error) new Error(e);
                 }
 
                 if (ch == -1) {
